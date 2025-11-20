@@ -133,12 +133,56 @@ python paper_to_video_v5.py \
 
 ---
 
+## 📁 File Paths and Formats
+
+### File Paths
+
+**You can use either:**
+- **Just filename**: If the file is in the same directory where you run the command
+- **Full path**: If the file is in a different location
+
+```bash
+# Files in current directory
+python paper_to_video_v5.py \
+    --paper-location="paper.pdf" \
+    --voice-sample=voice.wav \
+    --avatar-image=avatar.png
+
+# Files in different directories (full paths)
+python paper_to_video_v5.py \
+    --paper-location="/home/user/papers/quantum.pdf" \
+    --voice-sample=/home/user/voices/kpop_voice.wav \
+    --avatar-image=/home/user/images/idol.png
+```
+
+**No specific directory required** - files can be anywhere as long as the path is correct.
+
+### File Formats
+
+| File Type | Accepted Formats | Conversion Needed? |
+|-----------|------------------|-------------------|
+| **Voice sample** | WAV only | Yes, convert MP3 → WAV |
+| **Avatar image** | PNG, JPG, GIF, BMP, WEBP | No conversion needed |
+| **Paper** | PDF | No conversion needed |
+
+**Convert MP3 to WAV:**
+```bash
+ffmpeg -i voice.mp3 -ar 22050 -ac 1 voice.wav
+```
+
+**JPG avatars work directly:**
+```bash
+python paper_to_video_v5.py --avatar-image=idol.jpg
+```
+
+---
+
 ## 👤 Avatar Images
 
 ### Prepare Avatar Images
 
 **Requirements:**
-- PNG or JPG format
+- PNG or JPG format (both work!)
 - Transparent background (PNG with alpha channel) recommended
 - Portrait orientation
 - 300x400 pixels or larger (will be resized)
