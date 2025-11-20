@@ -1,0 +1,19 @@
+# === CORE DEPENDENCIES (Required) ===
+requests>=2.31.0
+pypdf>=3.17.0
+PyMuPDF>=1.23.0  # For figure extraction
+moviepy>=2.0.0
+Pillow>=10.0.0
+pydub>=0.25.0  # For audio duration
+gtts>=2.5.0  # Basic TTS (fallback)
+
+# === VOICE SYNTHESIS (Choose one) ===
+# Coqui TTS - RECOMMENDED for free voice cloning
+TTS>=0.22.0
+
+# === OPTIONAL DEPENDENCIES ===
+# Gemini (only if using --summarizer=gemini instead of ollama)
+# google-generativeai>=0.3.0
+
+# ElevenLabs (only if using --voice-engine=elevenlabs)
+# elevenlabs
