@@ -38,6 +38,31 @@ sudo apt-get install ffmpeg
 
 ---
 
+## 📁 File Paths and Formats
+
+### File Paths
+
+**You can use either:**
+- **Just filename**: `--voice-sample=voice.wav` (if in current directory)
+- **Full path**: `--voice-sample=/home/user/voices/voice.wav` (if elsewhere)
+
+### File Formats
+
+| File Type | Accepted Formats | Conversion Needed? |
+|-----------|------------------|-------------------|
+| **Voice sample** | WAV only | Yes, convert MP3 → WAV |
+| **Avatar image** | PNG, JPG, GIF, BMP, WEBP | No |
+| **Paper** | PDF | No |
+
+**Convert MP3 to WAV:**
+```bash
+ffmpeg -i voice.mp3 -ar 22050 -ac 1 voice.wav
+```
+
+**JPG avatars work directly** - no conversion needed!
+
+---
+
 ## 🎬 Generate Unlimited Videos
 
 ### Basic Example (No Custom Voice)
