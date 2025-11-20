@@ -88,6 +88,46 @@ No voice sample needed - uses Google's Korean TTS.
 
 ---
 
+## 📁 File Paths and Formats
+
+### File Paths
+
+**You can use either:**
+- **Just filename**: `--voice-sample=voice.wav` (if in current directory)
+- **Full path**: `--voice-sample=/home/user/voices/korean_voice.wav` (if elsewhere)
+
+```bash
+# Files in current directory
+python paper_to_video_v5_multilang.py \
+    --voice-sample=korean_voice.wav \
+    --avatar-image=idol.png
+
+# Files in different locations (full paths)
+python paper_to_video_v5_multilang.py \
+    --voice-sample=/data/voices/kpop_voice.wav \
+    --avatar-image=/data/images/idol.jpg
+```
+
+### File Formats
+
+| File Type | Accepted Formats | Conversion Needed? |
+|-----------|------------------|-------------------|
+| **Voice sample** | WAV only | Yes, convert MP3 → WAV |
+| **Avatar image** | PNG, JPG, GIF, BMP, WEBP | No |
+| **Paper** | PDF | No |
+
+**Convert MP3 to WAV:**
+```bash
+ffmpeg -i kpop_interview.mp3 -ar 22050 -ac 1 kpop_voice.wav
+```
+
+**JPG avatars work directly:**
+```bash
+python paper_to_video_v5_multilang.py --avatar-image=idol.jpg
+```
+
+---
+
 ## 🔧 Installation
 
 ### 1. Install Korean Font
