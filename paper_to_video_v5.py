@@ -4,7 +4,11 @@ import pypdf
 import fitz  # PyMuPDF
 import io
 from gtts import gTTS
-from moviepy import ImageClip, concatenate_videoclips, AudioFileClip, CompositeAudioClip
+# MoviePy imports (compatible with both 1.0.3 and 2.0.0)
+try:
+    from moviepy.editor import ImageClip, concatenate_videoclips, AudioFileClip, CompositeAudioClip
+except ImportError:
+    from moviepy import ImageClip, concatenate_videoclips, AudioFileClip, CompositeAudioClip
 from pydub import AudioSegment
 from PIL import Image, ImageDraw, ImageFont
 import argparse
@@ -286,8 +290,10 @@ def text_to_speech_coqui(text, output_path, speaker_wav=None, language="en"):
             )
 
         return True
-    except ImportError:
-        print("      ⚠️  Coqui TTS not installed. Install: pip install TTS")
+    except ImportError as e:
+        print(f"      ⚠️  Coqui TTS import error: {e}")
+        print("      Install: pip install TTS")
+        print("      If TTS is installed, try: pip install numpy==1.24.0")
         return False
     except Exception as e:
         print(f"      ⚠️  Coqui TTS failed: {e}")
@@ -361,12 +367,19 @@ def text_to_speech_per_section(sections, output_dir, voice_engine="gtts", voice_
         clean_text = clean_text_for_speech(combined_text)
 
         audio_path = os.path.join(output_dir, f"audio_section_{idx:02d}.mp3")
+        wav_path = os.path.join(output_dir, f"audio_section_{idx:02d}.wav")
 
         success = False
 
         if voice_engine == "coqui":
             print(f"   Section {idx} ({section['title']}): Using Coqui TTS...")
-            success = text_to_speech_coqui(clean_text, audio_path, speaker_wav=voice_sample)
+            # Coqui outputs WAV format, so save as WAV first
+            success = text_to_speech_coqui(clean_text, wav_path, speaker_wav=voice_sample)
+            if success and os.path.exists(wav_path):
+                # Convert WAV to MP3
+                audio_wav = AudioSegment.from_wav(wav_path)
+                audio_wav.export(audio_path, format="mp3")
+                os.remove(wav_path)  # Clean up WAV file
 
         elif voice_engine == "elevenlabs":
             print(f"   Section {idx} ({section['title']}): Using ElevenLabs...")
@@ -425,6 +438,33 @@ def create_gradient_background(width, height, color1, color2):
     base.paste(top, (0, 0), mask)
     return base
 
+def get_font(size):
+    """Get a font that works on both Linux and macOS."""
+    # Try multiple font paths for cross-platform compatibility
+    font_paths = [
+        # Linux paths
+        "DejaVuSans.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "/usr/share/fonts/TTF/DejaVuSans.ttf",
+        # macOS paths
+        "/System/Library/Fonts/Helvetica.ttc",
+        "/System/Library/Fonts/SFNSText.ttf",
+        "/Library/Fonts/Arial.ttf",
+        "/System/Library/Fonts/Supplemental/Arial.ttf",
+        # Fallback
+        "/System/Library/Fonts/Geneva.ttf",
+    ]
+
+    for font_path in font_paths:
+        try:
+            return ImageFont.truetype(font_path, size)
+        except (OSError, IOError):
+            continue
+
+    # Last resort: use default font
+    print(f"   ⚠️  No suitable font found, using default")
+    return ImageFont.load_default()
+
 def create_slides_with_avatar(sections, output_dir, figures=None, avatar_image=None):
     """
     Creates slides with optional avatar image (KPOP/Elsa/etc).
@@ -454,11 +494,11 @@ def create_slides_with_avatar(sections, output_dir, figures=None, avatar_image=N
         except Exception as e:
             print(f"   ⚠️  Could not load avatar: {e}")
 
-    # Fonts
-    title_font = ImageFont.truetype("DejaVuSans.ttf", 52)
-    header_font = ImageFont.truetype("DejaVuSans.ttf", 38)
-    body_font = ImageFont.truetype("DejaVuSans.ttf", 26)
-    small_font = ImageFont.truetype("DejaVuSans.ttf", 20)
+    # Fonts (cross-platform)
+    title_font = get_font(52)
+    header_font = get_font(38)
+    body_font = get_font(26)
+    small_font = get_font(20)
 
     width, height = 1280, 720
     margin = 60
@@ -628,7 +668,9 @@ def create_video(slides, slide_to_section, section_audio_files, output_dir, outp
             clip = ImageClip(slides[slide_idx], duration=slide_duration)
             clips.append(clip)
 
-        audio_clip = AudioFileClip(audio_path).with_start(current_time)
+        audio_clip = AudioFileClip(audio_path)
+        # Use set_start for moviepy 1.0.3 compatibility (with_start is 2.0.0+)
+        audio_clip = audio_clip.set_start(current_time)
         audio_clips.append(audio_clip)
         current_time += audio_duration
 
@@ -641,9 +683,11 @@ def create_video(slides, slide_to_section, section_audio_files, output_dir, outp
         clips[-1] = last_clip
         video = concatenate_videoclips(clips, method="compose")
     elif video.duration > final_audio.duration:
-        video = video.subclipped(0, final_audio.duration)
+        # Use subclip for moviepy 1.0.3 compatibility (subclipped is 2.0.0+)
+        video = video.subclip(0, final_audio.duration)
 
-    video = video.with_audio(final_audio)
+    # Use set_audio for moviepy 1.0.3 compatibility (with_audio is 2.0.0+)
+    video = video.set_audio(final_audio)
     video.write_videofile(output_path, fps=24, codec='libx264', audio_codec='aac',
                          threads=4, preset='medium')
 
